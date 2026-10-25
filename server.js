@@ -108,10 +108,13 @@ app.post("/api/incidents", async (req, res, next) => {
             });
         }
 
-        if (!["Low", "Medium", "High", "Critical"].includes(severity)) {
+        if (
+            !["Low", "Medium", "High", "Critical"].includes(severity)
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Severity must be Low, Medium, High, or Critical."
+                message:
+                    "Severity must be Low, Medium, High, or Critical."
             });
         }
 
@@ -234,7 +237,8 @@ app.patch("/api/incidents/:id", async (req, res, next) => {
         ) {
             return res.status(400).json({
                 success: false,
-                message: "Severity must be Low, Medium, High, or Critical."
+                message:
+                    "Severity must be Low, Medium, High, or Critical."
             });
         }
 
@@ -242,7 +246,7 @@ app.patch("/api/incidents/:id", async (req, res, next) => {
             req.params.id,
             { $set: req.body },
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             }
         );
@@ -268,7 +272,10 @@ app.patch("/api/incidents/:id", async (req, res, next) => {
 app.use((err, req, res, next) => {
     console.error(err);
 
-    if (err.name === "ValidationError" || err.name === "CastError") {
+    if (
+        err.name === "ValidationError" ||
+        err.name === "CastError"
+    ) {
         return res.status(400).json({
             success: false,
             message: err.message
@@ -282,8 +289,6 @@ app.use((err, req, res, next) => {
 });
 
 // Connect to MongoDB before starting Express
-
-
 async function startServer() {
     try {
         await mongoose.connect(
@@ -293,10 +298,15 @@ async function startServer() {
         console.log("MongoDB connected successfully");
 
         app.listen(PORT, () => {
-            console.log(`Server is running at http://localhost:${PORT}`);
+            console.log(
+                `Server is running at http://localhost:${PORT}`
+            );
         });
     } catch (error) {
-        console.error("Failed to connect to MongoDB:", error.message);
+        console.error(
+            "Failed to connect to MongoDB:",
+            error.message
+        );
         process.exit(1);
     }
 }
@@ -307,5 +317,5 @@ if (require.main === module) {
     startServer();
 }
 
-// Export the app so automated tests can use it.
+// Export the app for automated tests
 module.exports = app;
