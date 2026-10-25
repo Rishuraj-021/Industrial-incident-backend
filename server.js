@@ -282,6 +282,8 @@ app.use((err, req, res, next) => {
 });
 
 // Connect to MongoDB before starting Express
+
+
 async function startServer() {
     try {
         await mongoose.connect(
@@ -299,4 +301,11 @@ async function startServer() {
     }
 }
 
-startServer();
+// Start the server only when this file is run directly.
+// When Jest imports this file, the server will not start automatically.
+if (require.main === module) {
+    startServer();
+}
+
+// Export the app so automated tests can use it.
+module.exports = app;
