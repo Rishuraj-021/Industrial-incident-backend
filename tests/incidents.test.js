@@ -87,8 +87,6 @@ describe("Incidents API", () => {
             .post("/api/incidents")
             .send(validIncident);
 
-        expect(created.status).toBe(201);
-
         const incidentId = created.body.data._id;
 
         const response = await request(app)
@@ -123,8 +121,6 @@ describe("Incidents API", () => {
             .post("/api/incidents")
             .send(validIncident);
 
-        expect(created.status).toBe(201);
-
         const incidentId = created.body.data._id;
 
         const response = await request(app)
@@ -143,6 +139,80 @@ describe("Incidents API", () => {
             .get("/api/incidents/invalid-id");
 
         expect(response.status).toBe(400);
+        expect(response.body.success).toBe(false);
+    });
+
+    test("filters incidents by status", async () => {
+        const created = await request(app)
+            .post("/api/incidents")
+            .send(validIncident);
+
+        expect(created.status).toBe(201);
+
+        const response = await request(app)
+            .get("/api/incidents?status=Reported");
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+
+        expect(
+            response.body.data.every(
+                incident => incident.status === "Reported"
+            )
+        ).toBe(true);
+    });
+
+    test("filters incidents by location", async () => {
+        const created = await request(app)
+            .post("/api/incidents")
+            .send({
+                ...validIncident,
+                location: "North Factory Test Zone"
+            });
+
+        expect(created.status).toBe(201);
+
+        const response = await request(app)
+            .get("/api/incidents?location=North Factory");
+
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
+
+        expect(
+            response.body.data.length
+        ).toBeGreaterThanOrEqual(1);
+
+        expect(
+            response.body.data.every(
+                incident =>
+                    incident.location.includes("North Factory")
+            )
+        ).toBe(true);
+    });
+
+    test("rejects invalid severity during an update", async () => {
+        const created = await request(app)
+            .post("/api/incidents")
+            .send(validIncident);
+
+        const incidentId = created.body.data._id;
+
+        const response = await request(app)
+            .patch(`/api/incidents/${incidentId}`)
+            .send({ severity: "Urgent" });
+
+        expect(response.status).toBe(400);
+        expect(response.body.success).toBe(false);
+    });
+
+    test("returns 404 when updating a nonexistent incident", async () => {
+        const nonexistentId = new mongoose.Types.ObjectId().toString();
+
+        const response = await request(app)
+            .patch(`/api/incidents/${nonexistentId}`)
+            .send({ title: "Updated title" });
+
+        expect(response.status).toBe(404);
         expect(response.body.success).toBe(false);
     });
 });
